@@ -1,3 +1,5 @@
+use std::result;
+
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 use crate::model::subscriber::{self, Subscriber};
@@ -28,5 +30,17 @@ impl SubscriberRepository {
 
         return SUBSCRIBERS.get(product_type).unwrap().iter()
             .map(|f| f.value().clone()).collect();
+    }
+
+    pub fn delete(product_type: &str, url: &str) -> Option<Subscriber> {
+        if SUBSCRIBERS.get(product_type).is_none() {
+            SUBSCRIBERS.insert(String::from(product_type), DashMap::new());
+        }
+        let result = SUBSCRIBERS.get(product_type).unwrap()
+            .remove(url);
+        if !result.is_none() {
+            return Some(result.unwrap().1);
+        }
+        return None;
     }
 }
