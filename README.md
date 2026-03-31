@@ -77,6 +77,11 @@ This is the place for you to write reflections:
 ### Mandatory (Publisher) Reflections
 
 #### Reflection Publisher-1
+1. Dalam kasus BambangShop, sebuah struct tunggal sebenarnya cukup jika kita hanya memandang subscriber sebagai entitas data (menyimpan url dan name). Saat ini hanya mengirim notifikasi via HTTP POST ke URL tertentu yang dimana perilakunya seragam. Namun, secara arsitektur, kita tetap membutuhkan abstraksi (di Rust disebut Trait) untuk fleksibilitas jangka panjang jika kita ingin mendukung berbagai jenis subscriber di masa depan. Jika ke depannya aplikasi ingin mendukung jenis notifikasi lain seperti pengiriman melalui Email atau SMS, kita butuh Trait Observer dengan fungsi update(). Dengan Trait, Publisher tidak perlu peduli bagaimana cara notifikasi dikirim, ia hanya perlu memanggil fungsi update() tersebut.
+
+2. Penggunaan DashMap dalam menyimpan data Subscriber jauh lebih efisien dibandingkan dengan Vec atau list biasa karena kebutuhan akan keunikan data dan kecepatan akses. Mengingat url harus bersifat unik untuk setiap Subscriber, DashMap memungkinkan kita untuk melakukan pencarian, pembaruan, dan penghapusan data dengan kompleksitas waktu rata-rata $O(1)$ tanpa perlu menyisir seluruh elemen satu per satu seperti pada Vec yang memiliki kompleksitas $O(n)$. Selain itu, struktur data map yang dipetakan berdasarkan product_type mempermudah pengelompokan Subscriber sehingga proses distribusi notifikasi menjadi lebih terarah dan sistematis sesuai dengan kategori produk.
+
+3. Meskipun pola Singleton yang kita buat menggunakan lazy_static! sudah menjamin bahwa hanya ada satu instansi daftar subscriber di seluruh program, pola tersebut tidak secara otomatis menjamin keamanan saat data diakses oleh banyak pengguna sekaligus (thread-safety). Dalam lingkungan multithreading seperti aplikasi web ini, beberapa proses bisa saja mencoba membaca atau mengubah data di waktu yang bersamaan, yang berisiko menyebabkan race condition atau error. Oleh karena itu, kita tetap membutuhkan DashMap karena ia dirancang khusus untuk menangani akses bersamaan tersebut secara aman tanpa perlu mengelola penguncian (locking) manual yang rumit. Jadi, Singleton dan DashMap bekerja saling melengkapi: Singleton memastikan objeknya cuma satu, sementara DashMap memastikan objek yang satu itu aman digunakan bersama-sama.
 
 #### Reflection Publisher-2
 
